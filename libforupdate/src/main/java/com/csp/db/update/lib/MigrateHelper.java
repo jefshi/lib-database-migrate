@@ -155,7 +155,7 @@ public final class MigrateHelper {
             selectConcat = TextUtils.join(",", selectColumns);
 
             builder.delete(0, builder.length());
-            builder.append("REPLACE INTO `")
+            builder.append("INSERT OR IGNORE INTO `")
                     .append(tableName)
                     .append("` (")
                     .append(intoConcat)
