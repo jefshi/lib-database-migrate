@@ -26,6 +26,7 @@ public final class MigrateHelper {
     private List<String> newTableNames;
     private final String TEMP_SUFFIX = "_TEMP_" + System.currentTimeMillis();
 
+    @FunctionalInterface
     public interface OnCreateAllTablesListener {
         void onCreateAllTables();
     }
