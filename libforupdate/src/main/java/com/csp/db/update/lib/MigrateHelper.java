@@ -131,6 +131,7 @@ public final class MigrateHelper {
 
             selectColumns.clear();
             intoColumns.clear();
+            // TODO 新旧表存在相同字段，旧表允许为 NULL，而新表不允许为 NULL，造成部分数据迁移失败
             // temporary table columns list
             for (TableInfo tableInfo : tempTableInfos) {
                 if (newTableInfos.contains(tableInfo)) {
