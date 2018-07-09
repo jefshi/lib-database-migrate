@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">DatabaseUpdate</string>
-    <string name="create">创建数据库，版本 1</string>
-    <string name="update">升级数据库，版本 2</string>
+    <string name="create">创建数据库</string>
+    <string name="update">升级数据库</string>
     <string name="delete">删除数据库</string>
     <string name="query">查询数据库</string>
 </resources>
