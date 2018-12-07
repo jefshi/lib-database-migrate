@@ -27,6 +27,10 @@ public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 }
 ```
 
+#### 源码说明
+
+详细的日后补充吧，这里只说明下，全部升级过程都通过 SQL 完成，不依赖反射等较危险的操作
+
 #### 感谢
 
 1. [yuweiguocn/GreenDaoUpgradeHelper](https://github.com/yuweiguocn/GreenDaoUpgradeHelper)
