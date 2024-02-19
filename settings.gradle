@@ -1,1 +1,34 @@
-include ':sample', ':libforupdate'
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+
+        maven { url("https://maven.aliyun.com/repository/public") } // central 仓和 jcenter 仓的聚合仓
+        maven { url("https://maven.aliyun.com/repository/google") }
+        maven { url("https://maven.aliyun.com/repository/gradle-plugin") }
+        maven { url "https://jitpack.io" }
+        google()
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        maven { url "https://maven.aliyun.com/repository/public" } // central 仓和 jcenter 仓的聚合仓
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
+        maven { url "https://jitpack.io" }
+        google()
+        mavenCentral()
+        mavenLocal()
+
+        flatDir {
+            dirs 'libs'
+        }
+    }
+}
+
+include ':sample'
+include ':libforupdate'
+
