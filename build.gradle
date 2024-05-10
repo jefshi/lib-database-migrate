@@ -1,4 +1,7 @@
 buildscript {
+    // 配置全局环境变量
+    apply from: "${rootDir.path}/gradle/dependencies.gradle"
+
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.2'
     }

@@ -1,0 +1,169 @@
+/**
+ * 发布组件到 Maven Central
+ * @version 1.0.0
+ */
+
+// Demo
+//// maven 发布
+//apply from: "${rootDir.path}/gradle/maven_publish_central.gradle"
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            mavenLib(MavenPublication) {
+//                groupId = POM_GROUP_ID
+//                artifactId = '组件ID，可带-'
+//                version = '1.0.0-SNAPSHOT' // [SNAPSHOT] 必须大写
+//                version = android.defaultConfig.versionName // [SNAPSHOT] 必须大写
+//                pom {
+//                    description = '描述'
+//                }
+//            }
+//        }
+//    }
+//}
+
+// maven 插件
+apply plugin: 'maven-publish'
+
+def isJar = project.plugins.hasPlugin('java')
+def isAar = project.plugins.hasPlugin('com.android.library')
+
+// 打包的资源内容
+if (isJar) {
+    // 注意 javaDoc 目前无法使用
+    [javadoc]*.options*.encoding = 'UTF-8'
+    task javadocJar(type: Jar, group: 'publishing') {
+        archiveClassifier.set("javadoc")
+        from javadoc
+    }
+    task sourcesJar(type: Jar, group: 'publishing') {
+        archiveClassifier.set("sources")
+        from sourceSets.main.allSource
+    }
+}
+if (isAar) {
+    // 关于 javaDoc 部分，至今未找到能用的
+    task androidSourcesJar(type: Jar) {
+        archiveClassifier.set("sources")
+        from android.sourceSets.main.java.srcDirs
+    }
+}
+
+
+// GPG 密钥签名，配置信息放【~/.gradle/gradle.properties】
+signing {
+    sign configurations.archives
+}
+
+// GPG 密钥签名，配置信息放【~/.gradle/gradle.properties】
+signing {
+    sign publishing.publications.mavenJar
+}
+
+// maven 打包并上传
+// 官方文档：https://docs.gradle.org/current/userguide/publishing_maven.html
+afterEvaluate {
+    // afterEvaluate 主要目的是获取已配置好的其他配置信息，如 bundleReleaseAar 任务、android.defaultConfig.versionName
+    publishing {
+        repositories {
+            // Maven Central 账户密码：为安全考虑，只会从全局的 gradle.properties 读取
+            def ossrhUsername = null
+            def ossrhPassword = null
+            try {
+                ossrhUsername = project.property("ossrhUsername")
+                ossrhPassword = project.property("ossrhPassword")
+            } catch (Exception ignored) {
+            }
+
+            // 一个远程仓库配置，生成并对应一个 publish发布名称PublicationTo仓库名称Repository 任务
+            maven {
+                name 'releases'
+                url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2'
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+            }
+            maven {
+                name 'snapshots'
+                url = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+            }
+        }
+
+        publications {
+            // 一个发布配置，生成并对应一个 publish发布名称PublicationTo仓库名称Repository 任务
+            mavenLib(MavenPublication) {
+                if (isJar) {
+                    from components.java
+                    // artifact javadocJar
+                    artifact sourcesJar
+                } else if (isAar) {
+                    artifact androidSourcesJar
+                    artifact bundleReleaseAar
+                }
+
+                groupId = POM_GROUP_ID
+                artifactId = POM_ARTIFACT_ID
+                version = '0.0.0-SNAPSHOT' // [SNAPSHOT] 必须大写
+
+                // pom.xml 标签含义参考：http://www.javashuo.com/article/p-zlitehoa-eg.html
+                pom {
+                    name = artifactId
+                    description = POM_DESCRIPTION
+                    url = POM_SCM_URL
+
+                    // 配置代码库，为 Maven 站点和其它插件使用
+                    scm {
+                        url = POM_SCM_URL
+                        developerConnection = POM_SCM_CONNECTION
+                        connection = POM_SCM_CONNECTION
+                    }
+
+                    // 证书
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution = 'repo'
+                        }
+                    }
+
+                    // 开发者信息
+                    developers {
+                        developer {
+                            id = POM_DEVELOPER_ID
+                            name = POM_DEVELOPER_NAME
+                            email = POM_DEVELOPER_EMAIL
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 发布成功后，打印发布信息
+tasks.withType(PublishToMavenRepository) {
+    doLast {
+        def pom = publishing.publications.mavenLib
+        def repo = it.name.endsWith('ToSnapshotsRepository') ? publishing.repositories.snapshots
+                : it.name.endsWith('ToReleasesRepository') ? publishing.repositories.releases
+                : null
+        if (repo == null) {
+            println "【${project.name}】项目，成功往未知远程 Maven 仓库发布版本：${pom.groupId}:${pom.artifactId}:${pom.version}"
+        } else {
+            println "【${project.name}】项目，【${repo.credentials.username}】用户，" +
+                    "成功往【${repo.url}】发布版本：${pom.groupId}:${pom.artifactId}:${pom.version}"
+        }
+    }
+}
+tasks.withType(PublishToMavenLocal) {
+    doLast {
+        def pom = publishing.publications.mavenJar
+        println "【${project.name}】项目，成功往本地 Maven 缓存发布版本：${pom.groupId}:${pom.artifactId}:${pom.version}"
+    }
+}

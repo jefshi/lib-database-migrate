@@ -1,0 +1,65 @@
+/**
+ * @version 1.0.0
+ */
+apply plugin: 'com.android.application'
+
+// [Gradle 编译配置]相关的提交内容见博客【Android Gradle 常用配置】
+android {
+    compileSdkVersion project.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion project.app_minSdkVersion
+        targetSdkVersion project.targetSdkVersion
+
+        testInstrumentationRunner dep.junit_runner
+
+        def assembleTime = new Date().format("yyyy-MM-dd HH:mm", TimeZone.getDefault())
+        buildConfigField "String", "ASSEMBLE_TIME", "\"${assembleTime}\""
+    }
+
+    // java 1.8
+    compileOptions {
+        sourceCompatibility project.sourceCompatibilityVersion
+        targetCompatibility project.targetCompatibilityVersion
+    }
+
+    // 自动签名
+    signingConfigs {
+        // 加载配置文件
+        File propertiesFile = rootProject.file('keystore/keystore.properties')
+        Properties properties = new Properties()
+        properties.load(propertiesFile.newDataInputStream())
+
+        // 配置自动签名
+        release {
+            storeFile file(properties['KEY_APP_STORE_FILE'])
+            storePassword properties['KEY_STORE_PASSWORD']
+            keyAlias properties['KEY_ALIAS']
+            keyPassword properties['KEY_PASSWORD']
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release // 自动签名
+        }
+
+        release {
+            signingConfig signingConfigs.release
+            debuggable false
+            zipAlignEnabled true
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
+    // 单元测试
+    testImplementation dep.junit
+    androidTestImplementation dep.junit_ext
+    androidTestImplementation dep.espresso_core
+}

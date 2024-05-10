@@ -1,0 +1,36 @@
+/**
+ * @version 1.1.0
+ */
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion project.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion project.lib_minSdkVersion
+        targetSdkVersion project.targetSdkVersion
+
+        testInstrumentationRunner dep.junit_runner
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // java 1.8
+    compileOptions {
+        sourceCompatibility project.sourceCompatibilityVersion
+        targetCompatibility project.targetCompatibilityVersion
+    }
+}
+
+dependencies {
+    // 单元测试
+    testImplementation dep.junit
+    androidTestImplementation dep.junit_ext
+    androidTestImplementation dep.espresso_core
+}
