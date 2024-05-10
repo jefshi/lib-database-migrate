@@ -36,6 +36,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (id == R.id.btn_02) {
             ++mVersion;
             createSqlite(mVersion, R.string.update);
+            String tip = "APP_INFO：新增/修改字段，应有：3+2=5条数据\nACCOUNT_INFO：删除/修改字段，应有：3+3=6条数据";
+            Log.i(TAG, tip);
+            Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
         } else if (id == R.id.btn_03) {
             deleteDatabase(SqliteHelper.DATABASE_NAME);
         } else if (id == R.id.btn_04) {

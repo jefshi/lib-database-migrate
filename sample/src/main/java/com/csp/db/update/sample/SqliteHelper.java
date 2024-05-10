@@ -56,8 +56,8 @@ public class SqliteHelper extends SQLiteOpenHelper {
                 + ")";
 
         sqls[1] = "INSERT INTO APP_INFO (PACKAGE_NAME, OPEN_ID, OPEN_COUNT, OPEN_TIME) VALUES"
-                + "  ('com.csp.sample01', null, 1, 51453485),"
-                + "  ('com.csp.sample02', null, 0, 51486443),"
+                + "  ('com.csp.sample01', NULL, 1, 51453485),"
+                + "  ('com.csp.sample02', NULL, 0, 51486443),"
                 + "  ('com.csp.sample03', 3, 1, 51223465)";
 
         sqls[2] = "CREATE TABLE ACCOUNT_INFO ("
@@ -81,7 +81,7 @@ public class SqliteHelper extends SQLiteOpenHelper {
         String[] sqls = new String[4];
         sqls[0] = "CREATE TABLE APP_INFO ("
                 + "  PACKAGE_NAME TEXT PRIMARY KEY NOT NULL,"
-                + "  OPEN_ID TEXT NOT NULL,"
+                + "  OPEN_ID TEXT NOT NULL DEFAULT 666,"
                 + "  OPEN_COUNT INTEGER,"
                 + "  OPEN_TIME INTEGER,"
                 + "  VERSION_CODE INTEGER NOT NULL DEFAULT 2,"
