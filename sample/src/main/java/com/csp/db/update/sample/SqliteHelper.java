@@ -27,6 +27,11 @@ public class SqliteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // 手动升级
+        // if (oldVersion <= 0) {
+        // }
+
+        // 自动升级
         MigrateHelper.migrate(db, () -> {
             String[] sqls = initForNew();
             execSql(db, sqls, "onUpgrade: ", oldVersion, newVersion);

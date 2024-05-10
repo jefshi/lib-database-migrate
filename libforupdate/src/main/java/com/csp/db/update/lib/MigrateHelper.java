@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 数据库升级时数据迁移帮助类
- * Github: https://github.com/jefshi/DatabaseUpdateHelper
- * Created by csp on 2018/07/07.
- * Modified by csp on 2018/07/07.
+ * 数据库升级时数据迁移帮助类：https://github.com/jefshi/DatabaseUpdateHelper
+ * 注意项：
+ * 1. 新旧表存在相同字段，旧表允许为 NULL，而新表不允许为 NULL。则旧表该字段实际值为 NULL 的数据集会迁移失败，所以需要先手动升级这部分数据再使用本工具
+ * <p>
+ * Created by csp on 2018/07/07
+ * Modified by csp on 2018/07/07
  *
  * @author csp
  * @version 1.0.0
@@ -141,7 +143,7 @@ public final class MigrateHelper {
 
             selectColumns.clear();
             intoColumns.clear();
-            // TODO 新旧表存在相同字段，旧表允许为 NULL，而新表不允许为 NULL，造成部分数据迁移失败
+            // 新旧表存在相同字段，旧表允许为 NULL，而新表不允许为 NULL，造成部分数据迁移失败。如果新表有 DEFAULT 还能尝试迁移（目前未实现），如果没有 DEFAULT 那只能先手动升级再使用本工具
             // temporary table columns list
             for (TableInfo tableInfo : tempTableInfos) {
                 if (newTableInfos.contains(tableInfo)) {
