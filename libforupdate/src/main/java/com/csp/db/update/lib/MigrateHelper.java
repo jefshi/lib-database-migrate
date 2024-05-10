@@ -5,8 +5,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 数据库升级时数据迁移帮助类
@@ -14,25 +17,23 @@ import java.util.List;
  * Created by csp on 2018/07/07.
  * Modified by csp on 2018/07/07.
  *
+ * @author csp
  * @version 1.0.0
  */
 public final class MigrateHelper {
-    private static boolean DEBUG = false;
-    private final int DEFAULT_STACK_ID = 2;
+    private static boolean sDebug = false;
 
-    private SQLiteDatabase mDatabase;
-
+    private final String TEMP_SUFFIX = "_TEMP_" + System.currentTimeMillis();
+    private final SQLiteDatabase mDatabase;
     private List<String> oldTableNames;
     private List<String> newTableNames;
-    private final String TEMP_SUFFIX = "_TEMP_" + System.currentTimeMillis();
-
-    @FunctionalInterface
-    public interface OnCreateAllTablesListener {
-        void onCreateAllTables();
-    }
 
     private MigrateHelper(SQLiteDatabase database) {
         mDatabase = database;
+    }
+
+    public static void setDebug(boolean debug) {
+        sDebug = debug;
     }
 
     public static void migrate(SQLiteDatabase db, OnCreateAllTablesListener listener) {
@@ -98,14 +99,14 @@ public final class MigrateHelper {
         for (String tableName : oldTableNames) {
             tempTableName = tableName + TEMP_SUFFIX;
             sql = "DROP TABLE IF EXISTS `" + tempTableName + '`';
-            execSQL(sql);
+            execSql(sql);
 
             sql = "CREATE TEMPORARY TABLE IF NOT EXISTS `"
                     + tempTableName + "` AS SELECT * FROM `" + tableName + '`';
-            execSQL(sql);
+            execSql(sql);
 
             sql = "DROP TABLE IF EXISTS `" + tableName + '`';
-            execSQL(sql);
+            execSql(sql);
         }
     }
 
@@ -175,10 +176,10 @@ public final class MigrateHelper {
                     .append(selectConcat)
                     .append(" FROM ")
                     .append(tempTableName);
-            execSQL(builder.toString());
+            execSql(builder.toString());
 
             sql = "DROP TABLE IF EXISTS " + tempTableName;
-            execSQL(sql);
+            execSql(sql);
         }
     }
 
@@ -187,9 +188,7 @@ public final class MigrateHelper {
         printLog(sql);
 
         List<TableInfo> tableInfos = new ArrayList<>();
-        Cursor cursor = null;
-        try {
-            cursor = mDatabase.rawQuery(sql, null);
+        try (Cursor cursor = mDatabase.rawQuery(sql, null)) {
             if (cursor == null) {
                 return new ArrayList<>();
             }
@@ -204,47 +203,39 @@ public final class MigrateHelper {
                 tableInfo.dfltValue = cursor.getString(4);
                 tableInfo.pk = cursor.getInt(5) == 1;
 
-                printLog(sql + "：" + tableInfo);
+                printLog("Table Info：" + tableInfo);
                 tableInfos.add(tableInfo);
             }
         } catch (Throwable throwable) {
             tableInfos.clear();
             printLog(sql, throwable);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
         }
         return tableInfos;
     }
 
-    private void execSQL(String sql) {
+    private void execSql(String sql) {
         Throwable throwable = null;
         try {
             mDatabase.execSQL(sql);
         } catch (Throwable tr) {
             throwable = tr;
         }
-        printLog(DEFAULT_STACK_ID, sql, throwable);
+        printLog(sql, throwable);
     }
 
     private void printLog(Object message) {
-        printLog(DEFAULT_STACK_ID, message, null);
+        printLog(message, null);
     }
 
     private void printLog(Object message, Throwable throwable) {
-        printLog(DEFAULT_STACK_ID, message, null);
-    }
-
-    private void printLog(int stackId, Object message, Throwable throwable) {
         String tag = null;
-        if (throwable != null || DEBUG) {
-            tag = getTag(new Exception().getStackTrace()[stackId]);
+        if (throwable != null || sDebug) {
+            tag = getTag(new Exception().getStackTrace()[2]);
         }
 
         if (throwable != null) {
             Log.e(tag, String.valueOf(message), throwable);
-        } else if (DEBUG) {
+        } else if (sDebug) {
             Log.d(tag, String.valueOf(message));
         }
     }
@@ -256,32 +247,47 @@ public final class MigrateHelper {
         return "--[" + simpleClassName + "][" + methodName + ']';
     }
 
+    @FunctionalInterface
+    public interface OnCreateAllTablesListener {
+        /**
+         * 创建所有的新表
+         */
+        void onCreateAllTables();
+    }
+
     private static class TableInfo {
-        int cid;
-        String name;
-        String type;
-        boolean notnull;
-        String dfltValue;
-        boolean pk;
+        private int cid;
+        private String name;
+        private String type;
+        private boolean notnull;
+        private String dfltValue;
+        private boolean pk;
 
         @Override
         public boolean equals(Object o) {
             return this == o
-                    || o != null
-                    && getClass() == o.getClass()
-                    && name.equals(((TableInfo) o).name);
+                    || o != null && getClass() == o.getClass() && Objects.equals(name, ((TableInfo) o).name);
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
+        @Override
+        @NonNull
         public String toString() {
-            return "TableInfo{" +
-                    "cid=" + cid +
-                    ", name='" + name + '\'' +
-                    ", type='" + type + '\'' +
-                    ", notnull=" + notnull +
-                    ", dfltValue='" + dfltValue + '\'' +
-                    ", pk=" + pk +
-                    '}';
+            if (sDebug) {
+                return super.toString();
+            } else {
+                return "{\"cid\":" + cid +
+                        ",\"name\":" + name +
+                        ",\"type\":" + type +
+                        ",\"notnull\": " + notnull +
+                        ",\"dfltValue\":" + dfltValue +
+                        ",\"pk\":" + pk +
+                        "}";
+            }
         }
     }
 }
