@@ -17,7 +17,7 @@ import java.util.List;
  * @version 1.0.0
  */
 public final class MigrateHelper {
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
     private final int DEFAULT_STACK_ID = 2;
 
     private SQLiteDatabase mDatabase;
@@ -40,26 +40,31 @@ public final class MigrateHelper {
     }
 
     private void migrate(OnCreateAllTablesListener listener) {
-        if (mDatabase == null)
+        if (mDatabase == null) {
             throw new IllegalArgumentException("SQLiteDatabase can't be null");
+        }
 
-        if (listener == null)
+        if (listener == null) {
             throw new IllegalArgumentException("OnCreateAllTablesListener can't be null");
+        }
 
         oldTableNames = selectAllTables();
-        if (oldTableNames != null)
+        if (oldTableNames != null) {
             createTemporaryTables();
+        }
 
         printLog("CREATE ALL TABLE: BEGIN");
         listener.onCreateAllTables();
         printLog("CREATE ALL TABLE: END");
 
-        if (oldTableNames == null)
+        if (oldTableNames == null) {
             return;
+        }
 
         newTableNames = selectAllTables();
-        if (newTableNames != null)
+        if (newTableNames != null) {
             migrateData();
+        }
     }
 
     private List<String> selectAllTables() {
@@ -80,8 +85,9 @@ public final class MigrateHelper {
         } catch (Throwable throwable) {
             printLog("SELECT ALL TABLE NAME", throwable);
         } finally {
-            if (cursor != null)
+            if (cursor != null) {
                 cursor.close();
+            }
         }
         return tableNames;
     }
@@ -117,17 +123,20 @@ public final class MigrateHelper {
         String intoConcat;
         String selectConcat;
         for (String tableName : oldTableNames) {
-            if (!newTableNames.contains(tableName))
+            if (!newTableNames.contains(tableName)) {
                 continue;
+            }
 
             newTableInfos = selectTableInfo(tableName);
-            if (newTableInfos.isEmpty())
+            if (newTableInfos.isEmpty()) {
                 continue;
+            }
 
             tempTableName = tableName + TEMP_SUFFIX;
             tempTableInfos = selectTableInfo(tempTableName);
-            if (tempTableInfos.isEmpty())
+            if (tempTableInfos.isEmpty()) {
                 continue;
+            }
 
             selectColumns.clear();
             intoColumns.clear();
@@ -150,8 +159,9 @@ public final class MigrateHelper {
                 }
             }
 
-            if (intoColumns.size() == 0)
+            if (intoColumns.size() == 0) {
                 continue;
+            }
 
             intoConcat = TextUtils.join(",", intoColumns);
             selectConcat = TextUtils.join(",", selectColumns);
@@ -180,8 +190,9 @@ public final class MigrateHelper {
         Cursor cursor = null;
         try {
             cursor = mDatabase.rawQuery(sql, null);
-            if (cursor == null)
+            if (cursor == null) {
                 return new ArrayList<>();
+            }
 
             TableInfo tableInfo;
             while (cursor.moveToNext()) {
@@ -200,8 +211,9 @@ public final class MigrateHelper {
             tableInfos.clear();
             printLog(sql, throwable);
         } finally {
-            if (cursor != null)
+            if (cursor != null) {
                 cursor.close();
+            }
         }
         return tableInfos;
     }
@@ -226,12 +238,13 @@ public final class MigrateHelper {
 
     private void printLog(int stackId, Object message, Throwable throwable) {
         String tag = null;
-        if (throwable != null || DEBUG)
+        if (throwable != null || DEBUG) {
             tag = getTag(new Exception().getStackTrace()[stackId]);
+        }
 
-        if (throwable != null)
+        if (throwable != null) {
             Log.e(tag, String.valueOf(message), throwable);
-        else if (DEBUG) {
+        } else if (DEBUG) {
             Log.d(tag, String.valueOf(message));
         }
     }
