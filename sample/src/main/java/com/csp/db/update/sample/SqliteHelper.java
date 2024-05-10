@@ -1,25 +1,27 @@
 package com.csp.db.update.sample;
 
 import android.content.Context;
-import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.csp.db.update.lib.MigrateHelper;
 
-public class SQLiteHelper extends SQLiteOpenHelper {
-    public static final String DATABASE_NAME = "sample.db";
-    private final String TAG = "--[SQLiteHelper]";
+/**
+ * @author csp
+ */
+public class SqliteHelper extends SQLiteOpenHelper {
+    public final static String DATABASE_NAME = "sample.db";
+    private final static String TAG = "--[SQLiteHelper]";
 
-    public SQLiteHelper(Context context, int version) {
+    public SqliteHelper(Context context, int version) {
         super(context, DATABASE_NAME, null, version);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         String[] sqls = initForOld();
-        execSQL(db, sqls, "onCreate: ", db.getVersion(), db.getVersion());
+        execSql(db, sqls, "onCreate: ", db.getVersion(), db.getVersion());
     }
 
 
@@ -27,11 +29,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         MigrateHelper.migrate(db, () -> {
             String[] sqls = initForNew();
-            execSQL(db, sqls, "onUpgrade: ", oldVersion, newVersion);
+            execSql(db, sqls, "onUpgrade: ", oldVersion, newVersion);
         });
     }
 
-    private void execSQL(SQLiteDatabase db, String[] sqls, String message, int oldVersion, int newVersion) {
+    private void execSql(SQLiteDatabase db, String[] sqls, String message, int oldVersion, int newVersion) {
         for (String sql : sqls) {
             try {
                 Log.i(TAG, message + sql);

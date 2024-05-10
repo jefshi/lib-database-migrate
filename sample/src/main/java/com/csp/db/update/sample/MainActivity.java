@@ -3,11 +3,17 @@ package com.csp.db.update.sample;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.csp.db.update.lib.MigrateHelper;
+
+/**
+ * @author csp
+ */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private final String TAG = "--[MainActivity]";
     private int mVersion = 0;
@@ -17,7 +23,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        deleteDatabase(SQLiteHelper.DATABASE_NAME);
+        MigrateHelper.setDebug(true);
+        deleteDatabase(SqliteHelper.DATABASE_NAME);
     }
 
     @Override
@@ -30,18 +37,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ++mVersion;
             createSqlite(mVersion, R.string.update);
         } else if (id == R.id.btn_03) {
-            deleteDatabase(SQLiteHelper.DATABASE_NAME);
+            deleteDatabase(SqliteHelper.DATABASE_NAME);
         } else if (id == R.id.btn_04) {
-            if (getDatabasePath(SQLiteHelper.DATABASE_NAME).exists())
+            if (getDatabasePath(SqliteHelper.DATABASE_NAME).exists()) {
                 queryAll(mVersion);
-            else
+            } else {
                 Toast.makeText(this, "数据库未创建", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     private void createSqlite(int version, int resId) {
         try {
-            new SQLiteHelper(this, version).getWritableDatabase();
+            new SqliteHelper(this, version).getWritableDatabase();
             Toast.makeText(this, "当前数据库版本：" + version, Toast.LENGTH_SHORT).show();
         } catch (Throwable throwable) {
             Log.e(TAG, getString(resId), throwable);
@@ -49,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void queryAll(int version) {
-        SQLiteDatabase db = new SQLiteHelper(this, version)
+        SQLiteDatabase db = new SqliteHelper(this, version)
                 .getWritableDatabase();
 
         query(db, "APP_INFO");
@@ -58,12 +66,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void query(SQLiteDatabase db, String tableName) {
+        String sql = "SELECT * FROM " + tableName;
+        Log.i(TAG, sql);
+
         StringBuilder builder = new StringBuilder();
-        Cursor cursor = null;
-        try {
-            String sql = "SELECT * FROM " + tableName;
-            Log.i(TAG, sql);
-            cursor = db.rawQuery(sql, null);
+        try (Cursor cursor = db.rawQuery(sql, null)) {
             String[] columnNames = cursor.getColumnNames();
             int num = 0;
             while (cursor.moveToNext()) {
@@ -83,9 +90,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } catch (Throwable throwable) {
             Log.e(TAG, "查询表：" + tableName, throwable);
-        } finally {
-            if (cursor != null)
-                cursor.close();
         }
     }
 }
